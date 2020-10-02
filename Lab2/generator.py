@@ -12,6 +12,7 @@ def generator():
         num = random.randrange(1, 10001)
         work_message = {"num": num}
         socket.send_json(work_message)
+        time.sleep(1)
         print(work_message)
 
 

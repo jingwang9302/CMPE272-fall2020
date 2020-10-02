@@ -16,7 +16,7 @@ def worker():
         work = worker_receiver.recv_json()
         data = work["num"]
         squared_num = float(data) ** 0.5
-        result = {"worker": worker_id, "num": squared_num}
+        result = {"worker": worker_id, "num": data, "squared_num": squared_num}
         worker_sender.send_json(result)
 
         print(result)
