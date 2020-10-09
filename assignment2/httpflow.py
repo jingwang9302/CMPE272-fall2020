@@ -109,8 +109,18 @@ def set_scheduler():
             schedule.every().saturday.at("%s:%s" % (hrs, mins)).do(run_steps)
 
 
-set_scheduler()
+def main():
+    SCHEDULER_STEP_ID = yaml_file['Scheduler']['step_id_to_execute'][0]
+    STEPS_DICT = yaml_file['Steps'][0]
+    if (SCHEDULER_STEP_ID in STEPS_DICT.keys()):
+        set_scheduler()
+    else:
+        print('Invilid step ID provided')
 
-while True:
-    schedule.run_pending()
-    time.sleep(1)
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
+
+
+if __name__ == "__main__":
+    main()
