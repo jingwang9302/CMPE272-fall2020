@@ -9,6 +9,8 @@ verify_ssl = true
 schedule = "*"
 requests = "*"
 pyyaml = "*"
+python-crontab = "*"
+croniter = "*"
 
 [requires]
 python_version = "3.7"
