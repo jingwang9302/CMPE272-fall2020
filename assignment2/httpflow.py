@@ -2,8 +2,9 @@ import yaml
 import schedule
 import requests
 import time
+import sys
 
-with open(r'./input.yaml') as file:
+with open('./%s' % (sys.argv[1])) as file:
     yaml_file = yaml.safe_load(file)
 URL = yaml_file['Steps'][0][1]['outbound_url']
 METHOD = yaml_file['Steps'][0][1]['method']
@@ -21,6 +22,7 @@ def http_client(config):
 
 
 def run_steps():
+    TYPE = yaml_file['Steps'][0][1]['type']
     if TYPE == "HTTP_CLIENT":
         config = {
             'method': yaml_file['Steps'][0][1]['method'],
@@ -41,6 +43,7 @@ def run_steps():
 
 
 def set_scheduler():
+    SCHEDULER_WHEN = yaml_file['Scheduler']['when']
     cron_list = SCHEDULER_WHEN.split()
     mins = cron_list[0]
     hrs = cron_list[1]
