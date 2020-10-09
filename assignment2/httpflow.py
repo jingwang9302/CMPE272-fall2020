@@ -14,14 +14,30 @@ print(SCHEDULER_WHEN)
 print(METHOD)
 
 
-def http_client():
-    response = requests.request(METHOD, URL)
+def http_client(config):
+    response = requests.request(config['method'], config['url'])
     print(response)
     return response
 
 
 def run_steps():
-    print("steps here")
+    if TYPE == "HTTP_CLIENT":
+        config = {
+            'method': yaml_file['Steps'][0][1]['method'],
+            'url': yaml_file['Steps'][0][1]['outbound_url']
+        }
+        response = http_client(config)
+
+        condition = {
+            'status_code':
+            yaml_file['Steps'][0][1]['condition']['if']['equal']['right']
+        }
+        if response.status_code == condition['status_code']:
+            print(response.content)
+        else:
+            print("Error")
+    else:
+        print("Invalid type")
 
 
 def set_scheduler():
@@ -93,7 +109,6 @@ def set_scheduler():
             schedule.every().saturday.at("%s:%s" % (hrs, mins)).do(run_steps)
 
 
-# http_client()
 set_scheduler()
 
 while True:
