@@ -6,40 +6,71 @@ import sys
 
 with open('./%s' % (sys.argv[1])) as file:
     yaml_file = yaml.safe_load(file)
+
 URL = yaml_file['Steps'][0][1]['outbound_url']
 METHOD = yaml_file['Steps'][0][1]['method']
 SCHEDULER_WHEN = yaml_file['Scheduler']['when']
-
-print(URL)
-print(SCHEDULER_WHEN)
-print(METHOD)
+TYPE = yaml_file['Steps'][0][1]['type']
+CONDITION = yaml_file['Steps'][0][1]['condition']['if']['equal']['right']
+SCHEDULER_STEP_ID = yaml_file['Scheduler']['step_id_to_execute'][0]
+STEPS_DICT = yaml_file['Steps'][0]
+ACTION = yaml_file['Steps'][0][1]['condition']['then']['action']
+ERROR_DATA = yaml_file['Steps'][0][1]['condition']['else']['data']
 
 
 def http_client(config):
     response = requests.request(config['method'], config['url'])
-    print(response)
+    # print(response)
     return response
 
 
 def run_steps():
-    TYPE = yaml_file['Steps'][0][1]['type']
+    active_step_id = SCHEDULER_STEP_ID
+    TYPE = yaml_file['Steps'][0][active_step_id]['type']
     if TYPE == "HTTP_CLIENT":
         config = {
-            'method': yaml_file['Steps'][0][1]['method'],
-            'url': yaml_file['Steps'][0][1]['outbound_url']
+            'method': yaml_file['Steps'][0][active_step_id]['method'],
+            'url': yaml_file['Steps'][0][active_step_id]['outbound_url']
         }
-        response = http_client(config)
+        while True:
+            response = http_client(config)
+            condition = {
+                'status_code':
+                yaml_file['Steps'][int(active_step_id) - 1][int(
+                    active_step_id)]['condition']['if']['equal']['right'],
+                'action':
+                yaml_file['Steps'][int(active_step_id) - 1][int(
+                    active_step_id)]['condition']['then']['action'],
+                'action_data':
+                yaml_file['Steps'][int(active_step_id) - 1][int(
+                    active_step_id)]['condition']['then']['data'],
+            }
+            # print(condition)
 
-        condition = {
-            'status_code':
-            yaml_file['Steps'][0][1]['condition']['if']['equal']['right']
-        }
-        if response.status_code == condition['status_code']:
-            print(response.content)
-        else:
-            print("Error")
+            if response.status_code == condition['status_code']:
+                if condition['action'] == '::print':
+                    result = condition['action_data']
+                    print_result(result, response)
+                    return
+
+                if condition['action'] == '::invoke:step:2':
+                    config['url'] = yaml_file['Steps'][0][active_step_id][
+                        'condition']['then']['data']
+                    active_step_id = condition['action'].split(':')[-1]
+                    # print(config)
+            else:
+                print(ERROR_DATA)
     else:
         print("Invalid type")
+
+
+def print_result(result, response):
+    if result == 'http.response.body':
+        print(result, ' : ', response.content)
+    if result == 'http.response.headers.X-Ratelimit-Limit':
+        print(result, ' : ', response.headers['x-ratelimit-limit'])
+    if result == 'http.response.headers.content-type':
+        print(result, ' : ', response.headers['Content-Type'])
 
 
 def set_scheduler():
