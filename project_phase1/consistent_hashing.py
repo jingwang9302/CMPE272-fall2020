@@ -11,14 +11,14 @@ class ConsistentHashing:
                 self.add_node(node)
 
     def my_hash(self, key):
-        return (int(hashlib.md5(key.encode('utf-8')).hexdigest(), 16) % 3)
-        # return hashlib.md5(key.encode('utf-8')).hexdigest()
+        m = hashlib.md5(key.encode('utf-8'))
+        return int(m.hexdigest(), 16) % (2**32)
 
     def add_node(self, node):
-        for i in range(0, self.replicas):
-            key = self.my_hash(node)
-            self.ring[key] = node
-            self.sorted_keys.append(key)
+        # for i in range(0, self.replicas):
+        key = self.my_hash(node)
+        self.ring[key] = node
+        self.sorted_keys.append(key)
         self.sorted_keys.sort()
 
     def remove_node(self, node):
@@ -29,17 +29,14 @@ class ConsistentHashing:
 
     # Get node and node position
     def get_node(self, str_key):
-        if not self.ring:
-            print("None here")
-            return None, None
-        key = self.my_hash(str_key)
-        nodes = self.sorted_keys
-        for i in range(0, len(nodes)):
-            node = nodes[i]
-            if key <= node:
-                print("Key value: %s, store in Node %s at %s" % (key, node, i))
-                return self.ring[node], i
+        h = self.my_hash(str_key)
+        if h > self.sorted_keys[-1]:
+            return self.ring[self.sorted_keys[0]], 0
+        for i in range(len(self.sorted_keys)):
+            if h <= self.sorted_keys[i]:
+                return self.ring[self.sorted_keys[i]], i
 
+    # Save for future implementation
     # def get_nodes(self, str_key):
     #     print("here1")
     #     if not self.ring:

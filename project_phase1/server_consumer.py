@@ -15,11 +15,10 @@ def server(port):
         # FIXME: Implement to store the key-value data.
         di = dict()
         di[key] = value
-        print(di)
 
 
 if __name__ == "__main__":
-    num_server = 3
+    num_server = 1
     if len(sys.argv) > 1:
         num_server = int(sys.argv[1])
         print(f"num_server={num_server}")

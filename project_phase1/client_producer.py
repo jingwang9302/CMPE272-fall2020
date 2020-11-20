@@ -33,7 +33,7 @@ def generate_data_consistent_hashing(servers):
     print("Starting...")
     producers = create_clients(servers)
     hashing_ring = ConsistentHashing(servers)
-    for num in range(10, 20):
+    for num in range(10):
         data = {'key': f'key-{num}', 'value': f'value-{num}'}
         print(f"Sending data:{data}")
         producers[hashing_ring.get_node(data['key'])[0]].send_json(data)
@@ -45,19 +45,18 @@ def generate_data_hrw_hashing(servers):
     print("Starting...")
     # TODO
     producers = create_clients(servers)
-    hrw_hashing = HWR(servers, seed=42)
-    for num in range(20, 30):
+    hrw_hashing = HWR(servers, seed=31)
+    for num in range(10):
         data = {'key': f'key-{num}', 'value': f'value-{num}'}
         print(f"Sending data:{data}")
-        producers[hrw_hashing.find_leader_node(data['key'])].send_json(data)
-        print(hrw_hashing.find_leader_node(data['key']))
+        producers[hrw_hashing.find_leader_node(num)].send_json(data)
         time.sleep(1)
     print("Done")
 
 
 if __name__ == "__main__":
     servers = []
-    num_server = 3
+    num_server = 1
     if len(sys.argv) > 1:
         num_server = int(sys.argv[1])
         print(f"num_server={num_server}")
