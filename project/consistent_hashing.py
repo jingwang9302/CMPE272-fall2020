@@ -22,10 +22,10 @@ class ConsistentHashing:
         self.sorted_keys.sort()
 
     def remove_node(self, node):
-        for i in range(0, self.replicas):
-            key = my_hash(node)
-            del self.ring[key]
-            self.sorted_keys.remove(key)
+        # for i in range(0, self.replicas):
+        key = self.my_hash(node)
+        del self.ring[key]
+        self.sorted_keys.remove(key)
 
     # Get node and node position
     def get_node(self, str_key):
