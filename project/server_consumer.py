@@ -49,10 +49,6 @@ class Server:
         service_id = "serverid-" + str(port)
         c = consul.Consul()
         c.agent.service.deregister(service_id)
-        # kill server process
-
-    def check_heartbeats(self, url):
-        return consul.Check.http(url=url, interval=10, deregister=True)
 
     def get_all(self):
         return self.di
@@ -85,6 +81,5 @@ if __name__ == "__main__":
         server_port = int(sys.argv[1])
         server = Server(server_port)
         server.register()
-        print(f"port# ={server_port}")
     print(f"Starting a server at:{server_port}...")
     Process(target=server.server_connect, args=()).start()
