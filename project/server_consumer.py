@@ -24,8 +24,8 @@ class Server:
             if (op == 'PUT'):
                 key = raw['key']
                 value = raw['value']
-                res = self.put(key, value)
-
+                self.put(key, value)
+                res = 'success'
             if (op == 'GET_ONE'):
                 key = raw['key']
                 res = self.get_key(key)
@@ -55,11 +55,11 @@ class Server:
 
     def get_key(self, key):
         data_arr = self.di["collection"]
+        value = 'no value'
         for i in range(len(data_arr)):
             if data_arr[i]["key"] == key:
                 value = data_arr[i]['value']
-            else:
-                value = ""
+
         res = {
             'key': key,
             'value': value
@@ -67,12 +67,17 @@ class Server:
         return res
 
     def put(self, key, value):
-        new_pair = {
-            'key': key,
-            'value': value
-        }
-        res = self.di["collection"].append(new_pair)
-        return res
+        collection_list = self.di["collection"]
+        for data_di in collection_list:
+            if data_di["key"] == key:
+                return self.di["collection"]
+        else:
+            new_pair = {
+                'key': key,
+                'value': value
+            }
+            res = self.di["collection"].append(new_pair)
+            return res
 
 
 if __name__ == "__main__":
