@@ -32,7 +32,7 @@ class Server:
             if (op == 'GET_ALL'):
                 res = self.get_all()
             if (op == 'DE_REG'):
-                self.deregister()
+                self.deregister(self.port)
                 res = 'success'
 
             print(f"Server_port={self.port}:key={key},value={value}, op={op}")
@@ -45,7 +45,8 @@ class Server:
         c.agent.service.register(
             service_id=service_id, name=server_name, port=self.port)
 
-    def deregister(self, service_id):
+    def deregister(self, port):
+        service_id = "serverid-" + str(port)
         c = consul.Consul()
         c.agent.service.deregister(service_id)
         # kill server process

@@ -5,6 +5,7 @@ from itertools import cycle
 from consistent_hashing import ConsistentHashing
 from hrw import HWR
 import consul
+import json
 
 
 # def create_clients(servers):
@@ -108,16 +109,33 @@ class Client:
         res = producer_conn.recv()
         print("deregister success")
 
+    # 1.get data as server_data 2. remove node 3.put data
+    '''
+        print(server_data)
+        {"collection":[{"key":"key-0","value":"value-0"},{"key":"key-2","value":"value-2"},{"key":"key-8","value":"value-8"},{"key":"key-9","value":"value-9"}]}
+        '''
+
     def delete_node(self, port):
         producer_conn = self.producers[f"tcp://127.0.0.1:{port}"]
-        server_data = self.get_all_data_from_producer(producer_conn)
-        # save all data to other server
+        server_data = json.loads(
+            self.get_all_data_from_producer(producer_conn))
         self.hashing_ring.remove_node(f"tcp://127.0.0.1:{port}")
-        print(server_data)
-        # for data in server_data:
-        #     print(data)
-        # self.put_data(
-        #     {'key': data[key], 'value': data, 'op': 'PUT'})
+
+        # put data
+        for data in server_data["collection"]:
+            print(data['key'])
+            self.put_data(
+                {'key': data['key'], 'value': data['value'], 'op': 'PUT'})
+
+        # producers = {}  # eg, 'tcp://127.0.0.1:{port}': producer_conn
+        self.deregister_node(port)
+
+        to_delete_url = f"tcp://127.0.0.1:{port}"
+        if to_delete_url in self.producers.keys():
+            del self.producers[to_delete_url]
+        self.servers.remove(to_delete_url)
+        print(self.producers.keys())
+        print(self.get_all_data())
 
         # if removing the last server, assign data to the first server
         # if current_server_position + 1 == len(self.servers):
@@ -140,13 +158,14 @@ if __name__ == "__main__":
         time.sleep(1)
     # Get all
     print(client.get_all_data())
+
     # Get one data
 
     # producer_conn = self.producers["tcp://127.0.0.1:2001"]
     # res = client.get_all_data_from_producer(producer_conn)
     # print(res)
 
-    # client.delete_node(2001)
+    # client.delete_node("2001")
 
 
 # servers = []  # eg. 'tcp://127.0.0.1:{port}'
