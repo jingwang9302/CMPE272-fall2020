@@ -15,14 +15,14 @@ class ConsistentHashing:
         return int(m.hexdigest(), 16) % (2**32)
 
     def add_node(self, node):
-        # for i in range(0, self.replicas):
         key = self.my_hash(node)
+        if key in self.sorted_keys:
+            return
         self.ring[key] = node
         self.sorted_keys.append(key)
         self.sorted_keys.sort()
 
     def remove_node(self, node):
-        # for i in range(0, self.replicas):
         key = self.my_hash(node)
         del self.ring[key]
         self.sorted_keys.remove(key)
@@ -35,6 +35,12 @@ class ConsistentHashing:
         for i in range(len(self.sorted_keys)):
             if h <= self.sorted_keys[i]:
                 return self.ring[self.sorted_keys[i]], i
+
+    def get_next_node(self, port):
+        i = self.get_node(f"tcp://127.0.0.1:{port}")[1] + 1
+        if i == len(self.sorted_keys):
+            i = 0
+        return self.ring[self.sorted_keys[i]]
 
     # Save for future implementation
     # def get_nodes(self, str_key):

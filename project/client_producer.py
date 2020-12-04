@@ -7,23 +7,23 @@ from hrw import HWR
 import consul
 import json
 
-from flask import Flask, request
-
 
 class Client:
     def __init__(self):
         self.servers = []  # eg. 'tcp://127.0.0.1:{port}'
         self.c = consul.Consul()
         # http://localhost:8500/v1/agent/services/的data
-        serversDict = self.c.agent.services()
+        self.update_membership()
+        self.hashing_ring = ConsistentHashing(self.servers)
 
+    def update_membership(self):
+        serversDict = self.c.agent.services()
+        self.servers = []
         for server in serversDict:
             each_server = serversDict[server]
             port = each_server['Port']
             self.servers.append(f'tcp://127.0.0.1:{port}')
-
         self.producers = self.create_clients(self.servers)
-        self.hashing_ring = ConsistentHashing(self.servers)
 
     def create_clients(self, servers):
         producers = {}  # eg, 'tcp://127.0.0.1:{port}': producer_conn
@@ -73,7 +73,7 @@ class Client:
         params = {'op': 'DE_REG', 'value': '', 'key': ''}
         producer_conn.send_json(params)
         res = producer_conn.recv()
-        print("deregister success")
+        return res
 
     '''
         > print(server_data)
@@ -98,57 +98,24 @@ class Client:
         if to_delete_url in self.producers.keys():
             del self.producers[to_delete_url]
         self.servers.remove(to_delete_url)
-        print(self.producers.keys())
-        print(self.get_all_data())
         return res
 
     def add_node(self, port):
-        pass
+        self.update_membership()
+        h = self.hashing_ring.add_node(f"tcp://127.0.0.1:{port}")
+        next_node_url = self.hashing_ring.get_next_node(port)
+        print(next_node_url)
 
+        next_conn = self.producers[next_node_url]
+        data_collection = json.loads(
+            self.get_all_data_from_producer(next_conn))
+        for data in data_collection['collection']:
+            print(data)
+            self.put_data(
+                {'key': data['key'], 'value': data['value'], 'op': 'PUT'})
 
-app = Flask(__name__)
-client = Client()
+        return 'success'
 
-
-@app.route('/api/put', methods=['PUT'])
-def put_data():
-    num = request.args['num']
-    res = client.put_data(
-        {'key': f'key-{num}', 'value': f'value-{num}', 'op': 'PUT'})
-    return res
-
-
-@app.route('/api/getone', methods=['GET'])
-def get_one():
-    num = request.args['num']
-    res = client.get_one_data(
-        {'key': f'key-{num}', 'value': '', 'op': 'GET_ONE'})
-    return res
-
-
-@ app.route('/api/getall', methods=['GET'])
-def get_all():
-    res = client.get_all_data()
-    return res
-
-
-@ app.route('/api/deletenode', methods={'PUT'})
-def delete_node():
-    port = request.args['port']
-    res = client.delete_node(port)
-    return res
-
-
-@ app.route('/api/addnode', methods={'PUT'})
-def add_node():
-    port = request.args['port']
-    res = 'success'
-    # TODO add node
-    return res
-
-
-if __name__ == "__main__":
-    app.run(host='127.0.0.1', port=5000)
 
 # Saved for HRW and RR algorithm
 # def create_clients(servers):

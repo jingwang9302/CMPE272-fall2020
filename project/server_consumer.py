@@ -20,7 +20,8 @@ class Server:
             # print(raw)
             # raw example: Server_port=2005:key=key-1,value=value-1, op=PUT
             op = raw['op']
-
+            key = 'no value'
+            value = 'no value'
             if (op == 'PUT'):
                 key = raw['key']
                 value = raw['value']
