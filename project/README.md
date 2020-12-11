@@ -1,3 +1,4 @@
+# This is the Phase1 of the project, please choose V-2.0 or branch feat/phase2 for the phase2 code
 # Class Project
 
 You will be buliding a distributed key-value datastore using ZeroMQ as transport protocol.
